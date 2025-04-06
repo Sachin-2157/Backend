@@ -10,8 +10,8 @@ const generateAccessTokenAndRefreshTokens = async (userId) =>
 {
     try {
         const user = await User.findById(userId)
-        const accessToken = await User.generateAccessToken()
-        const refreshToken = await User.generateRefreshToken()
+        const accessToken = await user.generateAccessToken()
+        const refreshToken = await user.generateRefreshToken()
 
         user.refreshToken = refreshToken
         await user.save({ validateBeforeSave: false })
@@ -101,13 +101,13 @@ const loginUser = asyncHandler(async (req, res) => {
     // send cookie
     const {email, username, password} = req.body
 
-    if (!username || !email) {
+    if (!(username || email)) {
         throw new ApiError(400, "username or email is required")
     }
 
-    const user = User.findOne(
+    const user = await User.findOne(
         {
-            $or: [{ email }, { email }]
+            $or: [{ email }, { username }]
         }
     )
     if (!user) {
@@ -128,7 +128,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     return res
-    .status(200)
+    .status(201)
     .cookie("accessToken", accessToken)
     .cookie("refreshToken", refreshToken)
     .json(
